@@ -1,0 +1,30 @@
+#Make sure to change the log file path as per your need
+property.filename = ./RCMCustomPublisher.log
+
+appenders = rolling
+
+appender.rolling.type = RollingFile
+appender.rolling.name = RollingFile
+appender.rolling.fileName = ${filename}
+appender.rolling.filePattern = ${filename}.backup-%d{MM-dd-yy-HH-mm-ss}-%i
+appender.rolling.layout.type = PatternLayout
+appender.rolling.layout.pattern = %d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n
+appender.rolling.policies.type = Policies
+appender.rolling.policies.time.type = OnStartupTriggeringPolicy
+appender.rolling.policies.size.type = SizeBasedTriggeringPolicy
+appender.rolling.policies.size.size=10MB
+appender.rolling.strategy.type = DefaultRolloverStrategy
+appender.rolling.strategy.max = 2
+
+loggers = rolling
+
+logger.rolling.name = pl.akozioro
+logger.rolling.level = debug
+logger.rolling.additivity = false
+logger.rolling.appenderRef.rolling.ref = RollingFile
+
+
+appender.rolling.strategy.Delete.type = Delete
+appender.rolling.strategy.Delete.basePath = ${filename}.backup
+appender.rolling.strategy.Delete.ifLastModified.type = IfLastModified
+appender.rolling.strategy.Delete.ifLastModified.age = 10s
