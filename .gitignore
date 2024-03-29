@@ -4,3 +4,6 @@
 build/
 out
 RCMCustomPublisher.log
+src/main/resources/serviceAccountKey.json.prod
+src/main/resources/serviceAccountKey.json.dev
+src/main/resources/serviceAccountKey.json
