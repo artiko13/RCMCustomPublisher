@@ -10,8 +10,8 @@ import java.util.Random;
 
 public class MockedTask extends Task {
 
-    public MockedTask(String host, int port, FirebaseHandler firebaseHandler, JTextArea logTextArea) {
-        super(host, port, firebaseHandler, logTextArea);
+    public MockedTask(String eventName, String host, int port, FirebaseHandler firebaseHandler, JTextArea logTextArea) {
+        super(eventName, host, port, firebaseHandler, logTextArea);
     }
 
     @Override
@@ -28,6 +28,9 @@ public class MockedTask extends Task {
         int clockTotal = 60000;
         int clockRemaining = clockTotal;
         while (true) {
+            if (stop) {
+                return;
+            }
             try {
                 if (isInterrupted()) {
                     return;

@@ -18,8 +18,9 @@ import java.util.Properties;
 
 public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
     private static final Logger LOGGER = LogManager.getLogger();
-    private FirebaseHandler firebaseHandler = new FirebaseHandler();
     private static final String APPLICATION_NAME = "RCM Custom Publisher";
+    private JLabel eventNameLabel;
+    private JTextField eventNameField;
     private JLabel hostLabel;
     private JTextField hostField;
     private String mockValue;
@@ -31,6 +32,7 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
     private String propertiesFile = "RCMCustomPublisher.properties";
     private Task task = null;
     private Properties properties;
+    private FirebaseHandler firebaseHandler;
 
     private static Color hexToColor(String hexColor) {
         if (hexColor.length() != 7 || hexColor.charAt(0) != '#') {
@@ -43,33 +45,50 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
     }
 
     public MainApp() throws IOException {
+        firebaseHandler = new FirebaseHandler("exist8");
         setBackground(MainApp.hexToColor("#68A5BB"));
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.insets = new Insets(0, 0, 0, 0);
 
-        // host label and field
-        hostLabel = new JLabel("Host:");
+        // event name label and field
+        eventNameLabel = new JLabel("Event Name:");
         c.gridx = 0;
         c.gridy = 0;
         c.anchor = GridBagConstraints.LINE_END;
         c.insets = new Insets(30, 30, 0, 0);
+        add(eventNameLabel, c);
+
+        eventNameField = new JTextField(30);
+        eventNameField.setBackground(hexToColor("#7a97a1"));
+        EmptyBorder paddingBorder = new EmptyBorder(5, 5, 5, 5);
+        eventNameField.setBorder(paddingBorder);
+        c.gridx = 1;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.LINE_START;
+        c.insets = new Insets(30, 5, 0, 30);
+        add(eventNameField, c);
+
+        // host label and field
+        hostLabel = new JLabel("Host:");
+        c.gridx = 0;
+        c.gridy = 1;
+        c.anchor = GridBagConstraints.LINE_END;
+        c.insets = new Insets(10, 30, 0, 0);
         add(hostLabel, c);
 
         hostField = new JTextField(30);
         hostField.setBackground(hexToColor("#7a97a1"));
-        EmptyBorder paddingBorder = new EmptyBorder(5, 5, 5, 5);
         hostField.setBorder(paddingBorder);
-//        hostField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         c.gridx = 1;
         c.anchor = GridBagConstraints.LINE_START;
-        c.insets = new Insets(30, 5, 0, 30);
+        c.insets = new Insets(10, 5, 0, 30);
         add(hostField, c);
 
         // port label and field
         portLabel = new JLabel("Port:");
         c.gridx = 0;
-        c.gridy = 1;
+        c.gridy = 2;
         c.anchor = GridBagConstraints.LINE_END;
         c.insets = new Insets(10, 30, 0, 0);
         add(portLabel, c);
@@ -84,7 +103,7 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
 
         // space
         c.gridx = 0;
-        c.gridy = 2;
+        c.gridy = 3;
         c.gridwidth = 2;
         add(Box.createVerticalStrut(10), c);
         c.insets = new Insets(10, 30, 0, 0);
@@ -94,7 +113,7 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
         startButton = new JButton("Start");
         stopButton = new JButton("Stop");
         c.gridx = 0;
-        c.gridy = 3;
+        c.gridy = 4;
         c.gridwidth = 1;
         c.weightx = 0.5;
         c.anchor = GridBagConstraints.LINE_END;
@@ -109,7 +128,7 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
 
         // space
         c.gridx = 0;
-        c.gridy = 4;
+        c.gridy = 5;
         c.gridwidth = 2;
         add(Box.createVerticalStrut(10), c);
         c.gridwidth = 1;
@@ -118,7 +137,7 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
         statusLabel = new JTextArea(10, 30);
         JScrollPane scrollPane = new JScrollPane(statusLabel);
         c.gridx = 0;
-        c.gridy = 5;
+        c.gridy = 6;
         c.gridwidth = 2;
         c.weightx = 1.0;
         c.weighty = 1.0;
@@ -145,6 +164,7 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
     private void startTask() {
         store();
         statusLabel.setText("");
+        String eventName = eventNameField.getText();
         String host = hostField.getText();
         int port = Integer.parseInt(portField.getText());
         if (task != null && task.isAlive() && !task.isInterrupted()) {
@@ -152,7 +172,7 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
             return;
         }
         boolean enableMock = Optional.ofNullable(properties).map(ps -> ps.getProperty("mock")).map(m -> "true".equalsIgnoreCase(m)).orElse(false);
-        task = enableMock ? new MockedTask(host, port, firebaseHandler, statusLabel) : new Task(host, port, firebaseHandler, statusLabel);
+        task = enableMock ? new MockedTask(eventName, host, port, firebaseHandler, statusLabel) : new Task(eventName, host, port, firebaseHandler, statusLabel);
         task.setUncaughtExceptionHandler(this);
         task.start();
         changeButtons(false);
@@ -176,6 +196,7 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
     }
 
     private void changeButtons(boolean stopped) {
+        eventNameField.setEnabled(stopped);
         hostField.setEnabled(stopped);
         portField.setEnabled(stopped);
         startButton.setEnabled(stopped);
@@ -188,6 +209,7 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
         try {
             InputStream input = new FileInputStream(propertiesFile);
             properties.load(input);
+            eventNameField.setText(properties.getProperty("eventName"));
             hostField.setText(properties.getProperty("host"));
             portField.setText(properties.getProperty("port"));
             mockValue = properties.getProperty("mock");
@@ -199,16 +221,18 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
     }
 
     private void store() {
+        String eventName = eventNameField.getText();
         String host = hostField.getText();
         int port = Integer.parseInt(portField.getText());
         // zapisanie wartości hosta i portu do pliku "myapp.properties"
         Properties properties = new Properties();
+        properties.setProperty("eventName", eventName);
         properties.setProperty("host", host);
         properties.setProperty("port", Integer.toString(port));
         properties.setProperty("mock", mockValue != null ? mockValue : "false");
         try {
             OutputStream output = new FileOutputStream(propertiesFile);
-            properties.store(output, "Ustawienia aplikacji");
+            properties.store(output, "App settings");
         } catch (Exception e) {
             LOGGER.error("Error - app configuration saving: " + e.getMessage());
         }

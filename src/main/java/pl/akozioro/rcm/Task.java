@@ -27,18 +27,20 @@ import java.util.stream.Collectors;
 
 class Task extends Thread {
     private static final Logger LOGGER = LogManager.getLogger();
-    private int port;
+    private String eventName;
     private String host;
+    private int port;
     private FirebaseHandler firebaseHandler;
     protected JTextArea logTextArea;
-    private boolean stop = false;
+    protected boolean stop = false;
     private static final Pattern CLOCK_PATTERN = Pattern.compile(".*CLOCK_UPDATE\\|A=(\\d+)\\|B=(\\d+)\\|C=(\\d+).*");
     private static final Pattern GRID_PATTERN = Pattern.compile("\\|C\\d+=([^\\|]+).*?\\|D\\d+=([^\\|]+).*?G\\d+=([^\\|]+).*?H\\d+=([^\\|]+).*?K\\d+=([^\\|]+).*?N\\d+=([^\\|]+).*?HA\\d+=([^\\|]+)");
 
     private List<GridRowModel> previouslySendGrid = null;
     private ClockModel previouslySendClock = null;
 
-    public Task(String host, int port, FirebaseHandler firebaseHandler, JTextArea logTextArea) {
+    public Task(String eventName, String host, int port, FirebaseHandler firebaseHandler, JTextArea logTextArea) {
+        this.eventName = eventName;
         this.host = host;
         this.port = port;
         this.firebaseHandler = firebaseHandler;
@@ -51,10 +53,14 @@ class Task extends Thread {
         LOGGER.info("Task started.");
         int i=1;
         while (true) {
+
             logTextArea.setText("");
             logTextArea.append("Connecting to " + host + ":" + port + " ..." + "\n");
-            try (final Socket connection = new Socket(host, port); final OutputStream out = connection.getOutputStream();
-                 InputStream in = connection.getInputStream(); InputStreamReader isr = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+
+            try (final Socket connection = new Socket(host, port);
+                 InputStream in = connection.getInputStream();
+                 InputStreamReader isr = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+
                 BufferedReader br = new BufferedReader(isr);
                 logTextArea.setText("");
                 logTextArea.append("Connected to " + host + ":" + port + ". Working ..." + "\n");
