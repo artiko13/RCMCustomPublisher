@@ -22,7 +22,7 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
     private static final String APPLICATION_NAME = "RCM Custom Publisher";
     private JLabel hostLabel;
     private JTextField hostField;
-    private String mockValue;
+    private boolean mockValue = false;
     private JLabel portLabel;
     private JTextField portField;
     private JTextArea statusLabel;
@@ -31,6 +31,7 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
     private String propertiesFile = "RCMCustomPublisher.properties";
     private Task task = null;
     private Properties properties;
+    private boolean showWindow = false;
 
     private static Color hexToColor(String hexColor) {
         if (hexColor.length() != 7 || hexColor.charAt(0) != '#') {
@@ -151,8 +152,7 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
             statusLabel.append("Previous thread is alive!" + "\n");
             return;
         }
-        boolean enableMock = Optional.ofNullable(properties).map(ps -> ps.getProperty("mock")).map(m -> "true".equalsIgnoreCase(m)).orElse(false);
-        task = enableMock ? new MockedTask(host, port, firebaseHandler, statusLabel) : new Task(host, port, firebaseHandler, statusLabel);
+        task = mockValue ? new MockedTask(host, port, firebaseHandler, statusLabel) : new Task(host, port, firebaseHandler, statusLabel);
         task.setUncaughtExceptionHandler(this);
         task.start();
         changeButtons(false);
@@ -190,7 +190,9 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
             properties.load(input);
             hostField.setText(properties.getProperty("host"));
             portField.setText(properties.getProperty("port"));
-            mockValue = properties.getProperty("mock");
+            mockValue = Boolean.TRUE.toString().equals(properties.getProperty("mock"));
+            showWindow = Boolean.TRUE.toString().equals(properties.getProperty("showWindow"));
+            setVisible(showWindow);
             startTask();
         } catch (Exception e) {
             e.printStackTrace();
@@ -205,7 +207,8 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
         Properties properties = new Properties();
         properties.setProperty("host", host);
         properties.setProperty("port", Integer.toString(port));
-        properties.setProperty("mock", mockValue != null ? mockValue : "false");
+        properties.setProperty("mock", String.valueOf(mockValue));
+        properties.setProperty("showWindow", String.valueOf(showWindow));
         try {
             OutputStream output = new FileOutputStream(propertiesFile);
             properties.store(output, "Ustawienia aplikacji");
@@ -217,7 +220,8 @@ public class MainApp extends JPanel implements Thread.UncaughtExceptionHandler {
     public static void main(String[] args) throws IOException {
         JFrame frame = new JFrame(APPLICATION_NAME);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.add(new MainApp());
+        MainApp mainApp = new MainApp();
+        frame.add(mainApp);
         frame.pack();
         frame.setVisible(true);
         frame.setResizable(false);

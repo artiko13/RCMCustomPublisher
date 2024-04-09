@@ -31,7 +31,7 @@ class Task extends Thread {
     private String host;
     private FirebaseHandler firebaseHandler;
     protected JTextArea logTextArea;
-    private boolean stop = false;
+    protected boolean stop = false;
     private static final Pattern CLOCK_PATTERN = Pattern.compile(".*CLOCK_UPDATE\\|A=(\\d+)\\|B=(\\d+)\\|C=(\\d+).*");
     private static final Pattern GRID_PATTERN = Pattern.compile("\\|C\\d+=([^\\|]+).*?\\|D\\d+=([^\\|]+).*?G\\d+=([^\\|]+).*?H\\d+=([^\\|]+).*?K\\d+=([^\\|]+).*?N\\d+=([^\\|]+).*?HA\\d+=([^\\|]+)");
 
@@ -143,6 +143,7 @@ class Task extends Thread {
                     .stream()
                     .map(t -> t.replaceAll("\\$[a-zA-Z]*", ""))
                     .collect(Collectors.toList());
+            LOGGER.debug("Times size: " + times.size());
             grid.add(GridRowModel.builder()
                     .number(matcher.group(6))
                     .count(matcher.group(3))

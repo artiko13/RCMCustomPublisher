@@ -28,6 +28,9 @@ public class MockedTask extends Task {
         int clockTotal = 60000;
         int clockRemaining = clockTotal;
         while (true) {
+            if (stop) {
+                return;
+            }
             try {
                 if (isInterrupted()) {
                     return;
